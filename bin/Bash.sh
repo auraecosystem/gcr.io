@@ -19,7 +19,7 @@ docker tag my-app europe-docker.pkg.dev/my-project/my-repo/my-app:v1
 docker push europe-docker.pkg.dev/my-project/my-repo/my-app:v1
 docker pull europe-docker.pkg.dev/my-project/my-repo/my-app:v1
 gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
-  --member="user:kubulee.kl@gmail.com" \
+  --member="user:web4application@gmail.com" \
   --role="roles/artifactregistry.writer"
 docker build -t my-app .
 
