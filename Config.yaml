@@ -1,0 +1,7 @@
+host: my-first-postgres-service-1d98555f.pg4266csfe9p4kjqrz6pytjdkv.c0.us-west-2.aws.pg.clickhouse.cloud
+port: 6432
+user: postgres
+password: "VwPnT6RBtyAHYEvml2JE"
+database: postgres
+sslmode: verify-full
+sslrootcert: My first Postgres service-ca-certificate.pem
