@@ -1,0 +1,91 @@
+Container Registry is deprecated. Effective March 18, 2025, Container Registry
+is shut down and writing images to Container Registry is unavailable.
+
+`gcr.io` URLs hosted on Artifact Registry, including Google-owned images
+with `gcr.io` URLs, are not affected by the Container Registry shutdown.
+
+Artifact Registry is the recommended service for container image storage and
+management on Google Cloud. Artifact Registry provides the same
+container management features as Container Registry and includes additional
+features and benefits. As a fully-managed service with support for both
+container images and non-container artifacts, Artifact Registry extends
+the capabilities of Container Registry.
+
+### Summary of new features
+
+Artifact Registry extends the capabilities of Container Registry with the following
+features:
+
+- Repository-level [access control](https://docs.cloud.google.com/artifact-registry/docs/access-control).
+- Hosting artifacts in [regions](https://docs.cloud.google.com/artifact-registry/docs/repositories/repo-locations) to reduce latency and data transfer costs, and to comply with data residency requirements.
+- Streaming images to [Google Kubernetes Engine](https://docs.cloud.google.com/kubernetes-engine/docs/how-to/image-streaming) and [Managed Service for Apache Spark](https://docs.cloud.google.com/dataproc-serverless/docs/guides/custom-containers#image_streaming) to reduce workload startup times.
+- [Deploying to Cloud Run from source](https://docs.cloud.google.com/run/docs/deploying-source-code).
+- [Audit logging](https://docs.cloud.google.com/artifact-registry/docs/audit-logging) for repository activity.
+- Enforcement of organization policy, including encryption with [customer-managed encryption keys](https://docs.cloud.google.com/artifact-registry/docs/cmek#org-policy) (CMEK) and [location constraints](https://docs.cloud.google.com/artifact-registry/docs/repositories/repo-locations#location-constraints).
+- [Scanning for OS and language package vulnerabilities](https://docs.cloud.google.com/artifact-analysis/docs/container-scanning-overview) in containers.
+- [Virtual repositories](https://docs.cloud.google.com/artifact-registry/docs/repositories/virtual-repo) that aggregate multiple repositories behind a single host.
+- [Remote repositories](https://docs.cloud.google.com/artifact-registry/docs/repositories/remote-repo) that cache artifacts from upstream sources such as Docker Hub or Maven Central.
+
+See the [feature comparison](https://docs.cloud.google.com/artifact-registry/docs/transition/transition-from-gcr#feature-comparison) for more details about these
+features.
+
+## Existing Container Registry images maintained by Google
+
+Most Google-owned images previously hosted on Container Registry are now hosted
+on Artifact Registry in `gcr.io` repositories. You don't need to change
+the URLs to pull these images. For example, you can still use the
+[Cloud Build official builder images](https://github.com/GoogleCloudPlatform/cloud-builders).
+
+## Cached Docker Hub images on `mirror.gcr.io`
+
+Artifact Registry caches frequently-accessed public Docker Hub images on
+`mirror.gcr.io`. For more information on using `mirror.gcr.io`, see
+[Pull cached Docker Hub images](https://docs.cloud.google.com/artifact-registry/docs/pull-cached-dockerhub-images).
+
+## Feature comparison
+
+The following table summarizes differences between Container Registry and
+Artifact Registry.
+
+| Feature | Container Registry | Artifact Registry |
+|---|---|---|
+| Supported formats | Container images only | Multiple artifact [formats](https://docs.cloud.google.com/artifact-registry/docs/supported-formats), including container images, language packages, and OS packages. |
+| Domain name | `gcr.io` | `pkg.dev` Artifact Registry can also store images for the `gcr.io` domain if you set up [gcr.io repositories](https://docs.cloud.google.com/artifact-registry/docs/transition/setup-gcr-repo). |
+| Repository modes | Not applicable | - **Standard**: Stores your artifacts. - **Remote**: Caches artifacts requested from an upstream source such as Docker Hub. - **Virtual**: Single endpoint multiple upstream repositories. |
+| Registry creation | You create a registry host by pushing the first image to it. Container Registry stores images in Cloud Storage buckets in your Google Cloud project and actions such as granting registry-specific permissions must be applied directly to a bucket. | Creating a repository is a separate operation from pushing and pulling to clearly separate repository administration from repository usage. - For backwards compatibility, you can set up [gcr.io repositories](https://docs.cloud.google.com/artifact-registry/docs/transition/setup-gcr-repo). The initial setup includes automatic creation of Artifact Registry repositories for each Container Registry host in your project and redirection of `gcr.io` to the corresponding Artifact Registry repositories. - For all push and pull requests to the `pkg.dev` domain, the repository must already exist. In Artifact Registry, there are no Cloud Storage buckets to manage in your Google Cloud projects. You perform image management actions directly on a repository. |
+| Registry location | Only four multi-regional registry hosts are available in a Google Cloud project. | Create multiple, separately-controlled repositories in region or multi-region. |
+| Access control | - Grant access using Cloud Storage roles. - You can restrict access to all images stored in a multi-region, but not individual repositories. For example, you can restrict access to `us.gcr.io` in the project `my-project`, but you cannot grant specific permissions for images under `us.gcr.io/my-project/team1` and `us.gcr.io/my-project/team2` | - Grant access using Artifact Registry [roles](https://docs.cloud.google.com/artifact-registry/docs/access-control#roles). - You can [restrict access](https://docs.cloud.google.com/artifact-registry/docs/access-control) to individual repositories. For example, you can separately control access to images in `us-docker.pkg.dev/my-project/team1` and `us-docker.pkg.dev/my-project/team2` - Grant [conditional access](https://docs.cloud.google.com/artifact-registry/docs/access-control#tags) with IAM and repository tags |
+| Authentication | Provides several authentication methods for pushing and pulling images with a third-party client. | Artifact Registry supports the same authentication methods as Container Registry. See [Setting up authentication for Docker](https://docs.cloud.google.com/artifact-registry/docs/docker/authentication) for details. |
+| Customer-managed encryption keys (CMEK) | Use CMEK to encrypt the storage buckets that contain your images. | Use [CMEK](https://docs.cloud.google.com/artifact-registry/docs/cmek) to encrypt individual repositories. |
+| Using Google Cloud console | View and manage Container Registry images from the Container Registry section of Google Cloud console. | View a list of your Artifact Registry and Container Registry repositories in the [Artifact Registry](https://console.cloud.google.com/artifacts) section of Google Cloud console. Manage your Artifact Registry repositories and images from this page. If you click a Container Registry repository, you are directed to the list of images in the [Container Registry](https://console.cloud.google.com/gcr) section of the Google Cloud console. |
+| Using gcloud CLI and API commands | Uses `gcloud container images` commands. Commands support shortened digests. If you don't specify the full digest string, Container Registry attempts to locate the correct image based on the partial string. There is no REST or RPC API for Container Registry. | Uses [`gcloud artifacts docker`](https://docs.cloud.google.com/sdk/gcloud/reference/artifacts/docker) commands. Commands don't support shortened digests. For a comparison of Container Registry and Artifact Registry gcloud CLI commands, see the [gcloud CLI command comparison](https://docs.cloud.google.com/artifact-registry/docs/transition/transition-from-gcr#gcloud-comparison). Artifact Registry provides a REST and RPC API for managing repositories and artifacts. |
+| Pub/Sub notifications | Publishes changes to the `gcr` topic. | Publishes changes to the `gcr` topic. If you create repositories in the same project as your existing Container Registry service, your existing Pub/Sub configuration works automatically. To learn more, see [Configuring Pub/Sub notifications](https://docs.cloud.google.com/artifact-registry/docs/configure-notifications). |
+| Audit logging | Container Registry does not provide audit logs for registry activity. | [Use Cloud Logging](https://docs.cloud.google.com/artifact-registry/docs/audit-logging) to track changes to your repositories. |
+| Cached Docker Hub images | `mirror.gcr.io` is a pull-through cache that stores the most frequently requested Docker Hub images across all users. `mirror.gcr.io` is now hosted on Artifact Registry. | `mirror.gcr.io` is now hosted on Artifact Registry. No action is required unless you are using `mirror.gcr.io` in a VPC Service Controls perimeter. For more information on using `mirror.gcr.io` in a VPC Service Controls perimeter, see [Use Artifact Registry with VPC Service Controls](https://docs.cloud.google.com/artifact-registry/docs/securing-with-vpc-sc#ar-vpc). |
+| VPC Service Controls | You can add Container Registry to a service perimeter. | You can [add Artifact Registry](https://docs.cloud.google.com/artifact-registry/docs/securing-with-vpc-sc) to a service perimeter. |
+| Metadata storage and analysis with Artifact Analysis | Scans for OS and language package vulnerabiities with on-demand scanning in images with a supported OS. Automatic scanning only returns OS vulnerability information. [Learn more about types of scanning](https://docs.cloud.google.com/artifact-analysis/docs/scanning-types). On-demand scanning : - The Google Cloud CLI command [gcloud artifacts docker images scan](https://docs.cloud.google.com/sdk/gcloud/reference/artifacts/docker/images/scan) scans for vulnerabilities in local images or images in the Container Registry. - The Google Cloud CLI command [gcloud artifacts docker images list-vulnerabilities](https://docs.cloud.google.com/sdk/gcloud/reference/artifacts/docker/images/list-vulnerabilities) returns vulnerability scanning results. - Scans return OS and language package vulnerability information for images in Container Registry with [supported operating systems](https://docs.cloud.google.com/artifact-analysis/docs/container-scanning-overview#linux-versions). Automatic scanning : - The Google Cloud CLI command [gcloud container images](https://docs.cloud.google.com/sdk/gcloud/reference/container/images) includes flags for viewing scan results, including vulnerabilities and other metadata. - Scans only return OS vulnerability information for images in Container Registry with [supported operating systems](https://docs.cloud.google.com/artifact-analysis/docs/container-scanning-overview#linux-versions). | Scans for OS and lanaguage package vulnerabiities with both on-demand and automatic scanning. [Learn more about types of scanning](https://docs.cloud.google.com/artifact-analysis/docs/scanning-types). On-demand scanning : - The Google Cloud CLI command [gcloud artifacts docker images scan](https://docs.cloud.google.com/sdk/gcloud/reference/artifacts/docker/images/scan) scans for vulnerabilities in local images or images in the Artifact Registry. - The Google Cloud CLI command [gcloud artifacts docker images list-vulnerabilities](https://docs.cloud.google.com/sdk/gcloud/reference/artifacts/docker/images/list-vulnerabilities) returns vulnerability scanning results. - Scans return OS and language package vulnerability information for images in Artifact Registry with [supported operating systems](https://docs.cloud.google.com/artifact-analysis/docs/container-scanning-overview#linux-versions). Automatic scanning : - The Google Cloud CLI command [gcloud artifacts docker images](https://docs.cloud.google.com/sdk/gcloud/reference/artifacts/docker/images) includes flags for viewing scan results, including vulnerabilities and other metadata. - Scans return OS vulnerability information for images in Artifact Registry with [supported operating systems](https://docs.cloud.google.com/artifact-analysis/docs/container-scanning-overview#linux-versions) and language package vulnerability information for both supported and unsupported operating systems. |
+| Image streaming | Unavailable | Stream images in Artifact Registry to [GKE](https://docs.cloud.google.com/kubernetes-engine/docs/how-to/image-streaming) or [Managed Service for Apache Spark](https://docs.cloud.google.com/dataproc-serverless/docs/guides/custom-containers#image_streaming) for faster autoscaling, faster pod startup, and reduced latency when pulling large images. |
+| Cloud Run source deployment | Unavailable | [Source deployment](https://docs.cloud.google.com/run/docs/deploying-source-code) lets you use a single gcloud CLI command to build a container image from your source code, store the image in Artifact Registry, and deploy it to Cloud Run. |
+| Pricing | Container Registry pricing is based on Cloud Storage usage, including storage and network data transfer. Since registry hosts are only available in multi-regions, data transfer costs include deploying images to Google Cloud | Artifact Registry has its own [pricing](https://docs.cloud.google.com/artifact-registry/pricing), based on storage and network data transfer. |
+| Quota | Container Registry has fixed request limits. Cloud Storage quotas also apply. | Artifact Registry has per-project and per-user [quotas](https://docs.cloud.google.com/artifact-registry/quotas). Per-user quota is unlimited by default, but you can configure a per-user cap so that a single user does not consume too much of the project-level quota. |
+
+## gcloud command comparison
+
+The following table summarizes Container Registry commands and the equivalent
+Artifact Registry commands in the gcloud CLI. Click a link
+in the table to view the reference page for the command.
+
+The table does not include all available Artifact Registry commands that
+have no equivalent in Container Registry. See the
+[`gcloud artifacts`](https://docs.cloud.google.com/sdk/gcloud/reference/artifacts)
+documentation for the full Artifact Registry command reference.
+
+| Operation | Container Registry | Artifact Registry |
+|---|---|---|
+| Create a repository | Not applicable. | [`gcloud artifacts repositories create`](https://docs.cloud.google.com/sdk/gcloud/reference/artifacts/repositories/create) |
+| Delete a repository | Not applicable. | [`gcloud artifacts repositories delete`](https://docs.cloud.google.com/sdk/gcloud/reference/artifacts/repositories/delete) |
+| List images | [`gcloud container images list`](https://docs.cloud.google.com/sdk/gcloud/reference/container/images/list) | [`gcloud artifacts docker images list`](https://docs.cloud.google.com/sdk/gcloud/reference/artifacts/docker/images/list) |
+| List tags | [`gcloud container images list-tags`](https://docs.cloud.google.com/sdk/gcloud/reference/container/images/list-tags) | [`gcloud artifacts docker tags list`](https://docs.cloud.google.com/sdk/gcloud/reference/artifacts/docker/tags/list) |
+| Add a tag | [`gcloud container images add-tag`](https://docs.cloud.google.com/sdk/gcloud/reference/container/images/add-tag) | [`gcloud artifacts docker tags add`](https://docs.cloud.google.com/sdk/gcloud/reference/artifacts/docker/tags/add) |
+| Delete a tag | [`gcloud container images untag`](https://docs.cloud.google.com/sdk/gcloud/reference/container/images/untag) | [`gcloud artifacts docker tags delete`](https://docs.cloud.google.com/sdk/gcloud/reference/artifacts/docker/tags/delete) |
+| Describe images | [`gcloud container images describe`](https://docs.cloud.google.com/sdk/gcloud/reference/container/images/describe) | [`gcloud artifacts docker images list --include-tags`](https://docs.cloud.google.com/sdk/gcloud/reference/artifacts/docker/images/list) |
